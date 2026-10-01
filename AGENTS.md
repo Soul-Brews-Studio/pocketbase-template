@@ -6,18 +6,23 @@ changing anything.
 
 ## First run: turn the template into the project
 
-Do this once, in order, when `project.env` still says `PROJECT_SLUG=pocketbase_template`.
-The repo's open issue labelled `setup` ("Set up this backend") holds the same checklist: tick its
-boxes as you go (`gh issue edit`) and close it when the definition of done is met.
+Do this once, in order. Work it **without blocking**: you may be running unattended (assigned to
+the `setup` issue by Copilot, Codex or another agent), where nobody can answer a question
+mid-task. Ask only when someone can answer right away; otherwise use the defaults below, finish
+the work, and list your open questions in the PR description.
 
-1. **Ask the human** (one message, all questions together):
-   - the project name and a one-line purpose,
-   - the data it stores: collections, their fields, and who may read/write each one,
-   - default login emails if `admin@example.invalid` / `app@example.invalid` are not wanted.
-   Do not invent the data model. If they only give a name, keep the `notes` example and say so.
-2. **Rename:** `scripts/rename.sh "<Project Name>" <slug> "<one-line purpose>"`.
-   The slug is lowercase letters, digits and underscores (it becomes the Home Assistant add-on
-   slug). The script prints every file it changed.
+1. **Know the project.** Sources, in this order: the human's message, the open `setup` issue
+   and its comments, `project.env`, the repository name.
+   - **Name:** the init workflow already named the project after the repository (`catlab-bro`
+     becomes "Catlab Bro" / `catlab_bro` in `project.env`). If `project.env` still says
+     `PROJECT_SLUG=pocketbase_template` (init did not run), derive it from the repository
+     name the same way. Never leave "PocketBase Template" in place.
+   - **Purpose and data model:** use what the human or the issue says. If nothing is given,
+     keep the `notes` example, finish everything else, and ask in the PR. Never invent
+     collections.
+2. **Rename** (only if the name above differs from `project.env`):
+   `scripts/rename.sh "<Project Name>" <slug> "<one-line purpose>"`. The slug is lowercase
+   letters, digits and underscores (it becomes the Home Assistant add-on slug).
 3. **README:** rewrite the title and the first paragraph for the project, point the CI badge at
    this repo (`gh repo view --json nameWithOwner`), and replace `notes` mentions. Keep it short:
    details belong in `docs/`.
@@ -29,6 +34,7 @@ boxes as you go (`gh issue edit`) and close it when the definition of done is me
    realtime delivers only the owner's records).
 6. **Regenerate and sync:** `scripts/export-collections.sh` then `scripts/sync-addon.sh`.
 7. **Verify** (see *Definition of done*), then commit with a message that says what changed.
+   Tick the boxes of the `setup` issue as you go and close it from the PR (`Fixes #<n>`).
 
 ## Rules you must follow
 

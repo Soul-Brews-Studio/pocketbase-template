@@ -19,10 +19,10 @@ docker compose logs        # admin UI URL + admin and app logins, random passwor
 
 ## Make it your project
 
-A new repo from this template opens a **"Set up this backend"** issue with the checklist:
+A new repo from this template **names itself after the repository** (`catlab-bro` → "Catlab
+Bro") and opens a **setup issue** with the rest of the checklist:
 
 ```sh
-scripts/rename.sh "Acme Tasks" acme_tasks "Task backend for Acme"
 # replace the `notes` example in pocketbase/pb_migrations/ + its checks in scripts/e2e.mjs
 scripts/export-collections.sh && scripts/sync-addon.sh
 scripts/local-e2e.sh       # → LOCAL E2E: ALL PASS

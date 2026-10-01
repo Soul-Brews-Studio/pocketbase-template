@@ -1,10 +1,10 @@
-This repository was created from the PocketBase backend template. Work through this list once to
-turn it into your project; an AI coding agent can do it for you (see the bottom).
+This repository was created from the PocketBase backend template and already named
+**__NAME__** after the repository (`project.env`; change it with `scripts/rename.sh`).
+Work through this list once to finish the setup; an AI coding agent can do it for you (see the bottom).
 
 ## Checklist
 
-- [ ] **Name it:** `scripts/rename.sh "<Project Name>" <slug> "<one-line purpose>"`
-      (slug: lowercase letters, digits, underscores)
+- [x] **Named** after the repository by the init workflow (rename again with `scripts/rename.sh` if you like)
 - [ ] **README:** rewrite the intro for this project
 - [ ] **Schema:** replace the example `notes` collection in `pocketbase/pb_migrations/` with your own
       collections and owner rules (pattern in `AGENTS.md` → *Add a collection*)
@@ -20,7 +20,8 @@ Open the repo in Claude Code, Codex or another coding agent and say:
 
 > Set up this template for my project, following AGENTS.md. Work on issue #__ISSUE__.
 
-It will ask for the project name, purpose and data model first. Answer here or in the chat.
+Describe the data in a comment here first (collections, fields, who may read/write) so the agent
+can build the real schema; without it, it keeps the `notes` example and lists its questions in the PR.
 
 ## Never commit
 

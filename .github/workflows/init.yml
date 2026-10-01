@@ -1,6 +1,8 @@
-# Runs once in a repository created from the template: opens the "Set up this backend" issue
-# with the first-run checklist (.github/setup-issue.md). Does nothing in the template itself,
-# and never opens a second issue (it looks for the `setup` label first).
+# Runs in a repository created from the template, never in the template itself:
+#   1. names the project after the repository, once: `catlab-bro` -> "Catlab Bro" / catlab_bro
+#      (scripts/rename.sh, committed by github-actions), so nothing says "PocketBase Template";
+#   2. opens the "Set up this backend" issue with the rest of the checklist, once (it looks for
+#      the `setup` label first).
 name: init
 
 on:
@@ -10,14 +12,36 @@ on:
 
 permissions:
   issues: write
-  contents: read
+  contents: write
 
 jobs:
-  setup-issue:
+  init:
     if: github.repository != 'Soul-Brews-Studio/pocketbase-template'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Name the project after the repository (once)
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if ! grep -q '^PROJECT_SLUG=pocketbase_template$' project.env; then
+            echo "already named: $(grep '^PROJECT_NAME=' project.env)"; exit 0
+          fi
+          # catlab-bro -> slug catlab_bro, name "Catlab Bro"
+          slug=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+|_+$//g; s/^([0-9])/p_\1/')
+          name=$(echo "$REPO_NAME" | sed -E 's/[-_.]+/ /g' | awk '{for (i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
+          scripts/rename.sh "$name" "$slug" "PocketBase backend for $name"
+          # the CI badge points at this repository
+          sed -i "s#Soul-Brews-Studio/pocketbase-template/actions#$REPO/actions#g" README.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Name the project \"$name\" ($slug) after the repository"
+          git push
+
       - name: Open the setup issue (once)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -28,8 +52,9 @@ jobs:
             echo "setup issue already exists"; exit 0
           fi
           gh label create setup -R "$REPO" --color 0E8A16 --description "First-run setup from the template" 2>/dev/null || true
-          url=$(gh issue create -R "$REPO" --title "Set up this backend" --label setup --body-file .github/setup-issue.md)
+          name=$(sed -n 's/^PROJECT_NAME=//p' project.env | sed 's/^"\(.*\)"$/\1/')
+          url=$(gh issue create -R "$REPO" --title "Set up $name" --label setup --body-file .github/setup-issue.md)
           n="${url##*/}"
-          sed "s/__ISSUE__/$n/" .github/setup-issue.md > /tmp/body.md
+          sed -e "s/__ISSUE__/$n/" -e "s/__NAME__/$name/g" .github/setup-issue.md > /tmp/body.md
           gh issue edit "$n" -R "$REPO" --body-file /tmp/body.md
           echo "opened $url"
