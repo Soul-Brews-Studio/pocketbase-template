@@ -3,11 +3,11 @@
 A repo made from this template is also a Home Assistant add-on store. This walkthrough installs
 one, **Catlab Bro** (`nazt/catlab-bro`, created from the template), on a real Home Assistant OS
 host and runs the whole loop: install, the sidebar panel with auto-login, a migration added
-without a new image and then committed back to the repo, an automatic release, and an app UI
-update without a restart.
+without a new image and then committed back to the repo, an automatic release, an app UI update
+without a restart, and moving the app UI to another source.
 
 Recorded on Home Assistant OS (Supervisor 2026.9) with PocketBase v0.40.4, catlab-bro 0.1.0 →
-0.1.8 and app UI ui-v0.1.0 → ui-v0.1.1. Unrelated sidebar entries are blurred; passwords and the
+0.1.11 and app UI ui-v0.1.0 → ui-v0.1.5. Unrelated sidebar entries are blurred; passwords and the
 setup QR code are redacted.
 
 **Before you start**
@@ -71,100 +71,118 @@ also says which drop-in migrations were merged and which app UI release was load
 
 Click **Catlab Bro** in the sidebar. The panel opens the project's **app UI**, the release of
 `ui/` named by the `ui_version` option (`latest` by default), served at `/`. The example app
-signs in with the app login and lists that user's notes; the two starter notes come from
-`pocketbase/seed/notes.json`, loaded once on the first start.
+signs in with the app login and sets that user's notes as an index, newest first, with their
+dates; the two starter notes come from `pocketbase/seed/notes.json`, loaded once on the first
+start. Tick a note to mark it done.
 
-![The app UI in the panel: Catlab Bro, sign in with the app login, ui-v0.1.0](images/15-app-ui-signin.png)
+![The app UI in the panel: Catlab Bro, Sign in with the app login, UI ui-v0.1.4 in the footer](images/15-app-ui-signin.png)
 
-![The app UI signed in, listing the two seeded notes](images/16-app-ui-notes.png)
+![The app UI signed in: two notes set as an index with dotted leaders to their dates, one ticked off](images/16-app-ui-notes.png)
 
 ## 6. The admin page: `/_setup/`
 
 The app's **Setup** link (or `/_setup/`) opens the admin page. It asks the add-on for a session
 through Home Assistant's ingress: **signed in to Home Assistant = signed in as the PocketBase
-admin**, no password.
+admin**, no password. The page reads like the backend's release notes:
 
 - The **first** Home Assistant user to open it claims the add-on; any other user is refused
   afterwards. Ingress is open to every Home Assistant user, not only admins, so the add-on does
   not trust "came through ingress" alone. To allow other users, list their ids in the
   `ha_user_ids` option (or delete `/data/ha-owner` to claim it again).
-- **Running 0.1.6 · 31ca547**: the version and the git commit the image was built from (a link).
+- **Running 0.1.10**, built from `1db9e5b` (a link to the commit) on PocketBase 0.40.4. When the
+  store has a newer version, an **Available** line links to the add-on page to install it.
+- **Unreleased**: drop-in migrations that exist only on this device (steps 8 and 9).
 - **Set up an app**: the API base, the app login and a one-tap setup link
   (`catlab-bro://setup?u=…&e=…&p=…`) as a QR code. It contains the app password, so it is only
-  shown here.
-- **App UI** and **Migrations**: below.
+  shown here, and the page masks it.
+- **App UI**: the running release, updates and its source (steps 10 and 11).
 
-![The admin page: signed in as the admin, running 0.1.6 with its commit, Set up an app with a redacted QR code, App UI up to date, and a drop-in migration that is not in the repo yet](images/17-setup-page.png)
+![The admin page in the panel: Running 0.1.10 built from 1db9e5b, Unreleased with a committed drop-in and the path to delete it, Set up an app with the QR code redacted](images/17-setup-page.png)
 
 ## 7. The dashboard, inside the panel
 
-**Open dashboard** shows the PocketBase dashboard right in the panel, already signed in (↗ opens
-it in its own tab). PocketBase normally forbids being framed; the template's hook allows it for
-its own origin only, which Home Assistant's ingress shares.
+**Open dashboard** shows the PocketBase dashboard right in the panel, already signed in (the
+arrow next to it opens it in its own tab). PocketBase normally forbids being framed; the
+template's hook allows it for its own origin only, which Home Assistant's ingress shares.
 
 ![The PocketBase dashboard inside the Home Assistant panel, signed in as admin, with the users, cats and notes collections](images/13-dashboard-in-panel.png)
 
 ## 8. Add a migration without a new image
 
-For a hotfix, a JS migration can be added at runtime: **Upload a migration** on the admin page
-(or put the file in `/addon_configs/<this add-on>/pb_migrations` with the Samba or File editor
-add-on). It shows as **pending**; **Apply migrations** restarts the add-on, and PocketBase applies
-it at start. Here `1790950000_add_cats.js` creates a `cats` collection; applying it took 8
-seconds.
+For a hotfix, a JS migration can be added at runtime: **Upload a migration** on the admin page,
+or drop the file into the folder it shows, `/addon_configs/<this add-on>/pb_migrations`, with
+the Samba share or the File editor add-on (**Copy path** copies it). The drop-in shows as
+**Pending** and **Not in the repo**, dated from the timestamp in its name. **Apply 1 migration**
+restarts the add-on, and PocketBase applies it at start; the page waits and reloads itself (about
+ten seconds). Here `1790990000_add_toys.js` creates a `toys` collection.
 
-![The Migrations section: 1790950000_add_cats.js uploaded and pending, with Apply migrations](images/11-migration-uploaded.png)
+![Unreleased: 1790990000_add_toys.js uploaded, Pending and Not in the repo, with Apply 1 migration and "restarts the add-on"](images/11-migration-uploaded.png)
 
-![After Apply migrations: the add-on restarted and the migration shows as applied](images/12-migration-applied.png)
+![After Apply: the migration is Applied but still Not in the repo, with Commit to repo and Download](images/12-migration-applied.png)
 
 ## 9. Commit it to the repo
 
 The repository is the source of truth: a migration that only lives in `/addon_configs` is not in
 git, a fresh install would not have it, and deleting that folder loses it. So the admin page
-flags it **not in the repo yet** (step 6's screenshot) with **Commit to repo ↗** and
-**Download**. Commit to repo opens GitHub's editor with the file already filled in, under
-`pocketbase/pb_migrations/` with the **same name**; you commit with your own GitHub login (the
-add-on stores no token).
+keeps it under **Unreleased**, in amber, with **Commit to repo** and **Download**. Commit to repo
+opens GitHub's editor with the file already filled in, under `pocketbase/pb_migrations/` with the
+**same name**; you commit with your own GitHub login (the add-on stores no token).
 
-![GitHub's new-file page pre-filled: catlab-bro / pocketbase / pb_migrations / 1790950000_add_cats.js on main, with the migration's code](images/18-github-commit-prefilled.png)
+![GitHub's new-file page pre-filled: catlab-bro / pocketbase / pb_migrations / 1790990000_add_toys.js on main, with the migration's code](images/18-github-commit-prefilled.png)
 
 The push does the rest, with no manual steps:
 
 - **CI** regenerates `pocketbase/collections.json` and the add-on's copy of `pocketbase/` and
   commits them (a web-editor commit cannot run those scripts).
 - **addon-image** sees that the current version is already published, bumps the patch number
-  (0.1.6 → 0.1.7), adds a CHANGELOG line with your commit's subject, and publishes the image.
+  (0.1.10 → 0.1.11), adds a CHANGELOG line with the commit's subject, and publishes the image.
 
 In Home Assistant, **Check for updates**, then **Update**: the changelog lists the commit.
 
-![The update dialog for 0.1.6, listing the automatic releases with their commit subjects and hashes](images/14-update-0.1.6.png)
+![The update dialog: installed 0.1.10, latest 0.1.11, with the changelog line of the push](images/14-update-0.1.11.png)
 
-After the update the drop-in is ignored (the built-in file of the same name wins) and is never
-run again, and the admin page says so:
+After the update the drop-in is skipped (the built-in file of the same name wins) and never runs
+again. The admin page says **In the repo** and names the exact file you can delete:
 
-![The Migrations section after the update: 1790950000_add_cats.js is in the repo now and the drop-in can be deleted](images/19-in-the-repo-now.png)
+![Unreleased after the update: both drop-ins In the repo, each with the path of the file that can be deleted](images/19-in-the-repo-now.png)
 
 ## 10. Update the app UI without a restart
 
-Bump `ui/VERSION` and push: the `ui-release` workflow publishes `ui-v0.1.1` with a `dist.zip`.
-UI releases do not create a new add-on version. The admin page notices the release (Home
-Assistant also shows a notification) and offers **Update UI**, which swaps the new build in
-while the add-on keeps running; the previous build is kept as `old`.
+Bump `ui/VERSION` and push: the `ui-release` workflow publishes `ui-v0.1.5` with a `dist.zip`.
+UI releases do not create a new add-on version. The admin page checks for a release when it opens
+(Home Assistant also shows a notification) and offers **Update to ui-v0.1.5**, which swaps the
+new build in while the add-on keeps running; the previous build is kept as `old`.
 
-![App UI: running ui-v0.1.0, ui-v0.1.1 is out, with the Update UI button](images/20-ui-update-available.png)
+![App UI: running ui-v0.1.4, ui-v0.1.5 is out, with Update to ui-v0.1.5 and "no restart"; the Source field below](images/20-ui-update-available.png)
 
-![App UI after the click: Now running ui-v0.1.1, up to date](images/21-ui-updated.png)
+The app tells its own users too, who cannot install it themselves:
 
-![The app in the panel on ui-v0.1.1: 2 notes, tap one to mark it done](images/22-app-ui-0.1.1.png)
+![The app in the panel with its update bar: a newer version of this app is out, an admin installs it in Setup](images/23-app-update-bar.png)
 
-The add-on's log shows the swap (`ui-update: ui-v0.1.0 -> ui-v0.1.1`) and no new start.
+![App UI after the click: Now running ui-v0.1.5, up to date](images/21-ui-updated.png)
+
+![The app on ui-v0.1.5, the update bar gone](images/22-app-ui-updated.png)
+
+The add-on's log shows the swap (`ui-update: ui-v0.1.4 -> ui-v0.1.5`) and no new start.
+
+## 11. Choose where the app UI comes from
+
+**Source**, under App UI, is the add-on's `ui_version` option, saved through the Supervisor (the
+add-on's Configuration tab shows the same value): `latest` follows new releases, a tag such as
+`ui-v0.1.4` pins one, a `dist.zip` URL loads that build, and `bundled` serves no app UI. A
+release or a URL loads at once, without a restart. Switching to or from `bundled` changes the
+folder PocketBase serves, so the page asks for a restart:
+
+![App UI after saving bundled: Restart needed, Saved, it takes effect when the add-on restarts, with Restart now](images/25-ui-source-bundled.png)
+
+With `bundled`, the panel opens the admin page itself; set the source back to `latest` to serve
+the app again.
+
+![After the restart: No app UI is served, the panel opens on this page, Source bundled](images/09-panel-signed-in.png)
 
 ## Other ways to the same screens
 
-- **No app UI** (`ui_version: bundled`): the panel opens the admin page directly.
-
-  ![The admin page as the panel's start page, with Open dashboard and Set up an app](images/09-panel-signed-in.png)
-
-- **Dashboard in its own tab** (↗):
+- **Dashboard in its own tab** (the arrow next to Open dashboard):
 
   ![The PocketBase dashboard signed in as admin, showing the notes collection with the two seeded notes](images/10-dashboard-signed-in.png)
 
