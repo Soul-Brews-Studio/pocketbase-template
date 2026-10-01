@@ -95,6 +95,11 @@ routerUse((e) => {
 // Home Assistant auto-login for the sidebar panel (see lib/halogin.js). Off unless HA_AUTO_LOGIN=true.
 routerAdd("GET", "/api/app/ha-login", (e) => require(`${__hooks}/lib/halogin.js`).haLogin(e))
 
+// Drop-in migrations for the panel (see lib/migrations.js). Superusers only.
+routerAdd("GET", "/api/app/migrations", (e) => require(`${__hooks}/lib/migrations.js`).status(e), $apis.requireSuperuserAuth())
+routerAdd("POST", "/api/app/migrations", (e) => require(`${__hooks}/lib/migrations.js`).upload(e), $apis.requireSuperuserAuth())
+routerAdd("POST", "/api/app/restart", (e) => require(`${__hooks}/lib/migrations.js`).restart(e), $apis.requireSuperuserAuth())
+
 // The app's setup link + login for the panel (see lib/setup.js). Superusers only.
 routerAdd("GET", "/api/app/setup", (e) => require(`${__hooks}/lib/setup.js`).setup(e), $apis.requireSuperuserAuth())
 

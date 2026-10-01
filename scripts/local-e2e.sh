@@ -128,6 +128,33 @@ serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp
 [ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: ha-user-1')" = 404 ]; result $? "ha-login is off unless HA_AUTO_LOGIN=true (standalone)"
 stop
 
+# --- 2c. drop-in migrations (merge-extra.sh + /api/app/migrations) -------------------------------
+extra="$tmp/extra"; mkdir -p "$extra/pb_migrations"
+cat > "$extra/pb_migrations/1790900000_dropin_demo.js" <<'JS'
+migrate((app) => {
+  app.save(new Collection({ type: "base", name: "dropin_demo", fields: [{ type: "text", name: "label" }] }))
+}, (app) => { app.delete(app.findCollectionByNameOrId("dropin_demo")) })
+JS
+mig() { curl -s "$url/api/app/migrations" -H "Authorization: $atok"; }
+EXTRA_DIR="$extra" serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-mig1.log"
+[ "$(mig | python3 -c 'import json,sys;print(json.load(sys.stdin)["pending"])')" = 1 ]; result $? "migrations: a dropped-in file shows as pending"
+[ "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/api/app/restart" -H "Authorization: $atok")" = 501 ]
+result $? "migrations: restart outside Home Assistant says to restart the container (501)"
+[ "$(curl -s -o /dev/null -w '%{http_code}' "$url/api/app/migrations")" = 401 ]; result $? "migrations: refused without a superuser session"
+up() { curl -s -o /dev/null -w '%{http_code}' -X POST "$url/api/app/migrations" -H "Authorization: $atok" -H 'Content-Type: application/json' -d "$1"; }
+[ "$(up '{"name":"1790900001_uploaded.js","content":"migrate((app) => {}, (app) => {})"}')" = 201 ] && [ -f "$extra/pb_migrations/1790900001_uploaded.js" ] \
+  && [ "$(up '{"name":"../evil.js","content":"migrate(1)"}')" = 400 ] && [ "$(up '{"name":"1790900002_x.js","content":"rm -rf"}')" = 400 ] \
+  && [ "$(up '{"name":"1790900001_uploaded.js","content":"migrate((app) => {}, (app) => {})"}')" = 409 ]
+result $? "migrations: upload writes a valid file; refuses paths, non-migrations and duplicates"
+stop
+"$here/scripts/merge-extra.sh" "$here/pocketbase" "$extra" "$tmp/run" >/dev/null
+EXTRA_DIR="$extra" serve "$data" "$tmp/run/pb_migrations" "$tmp/run/pb_hooks" "$tmp/serve-mig2.log"
+[ "$(mig | python3 -c 'import json,sys;print(json.load(sys.stdin)["pending"])')" = 0 ] \
+  && [ "$(curl -s -o /dev/null -w '%{http_code}' "$url/api/collections/dropin_demo" -H "Authorization: $atok")" = 200 ] \
+  && [ "$(mig | python3 -c 'import json,sys;print(len(json.load(sys.stdin)["files"]))')" = 2 ]
+result $? "migrations: after merge + restart the drop-in is applied (collection exists, nothing pending)"
+stop
+
 # --- 3. same schema, hooks disabled ------------------------------------------------------------
 mkdir -p "$tmp/no-hooks"
 serve "$data" "$here/pocketbase/pb_migrations" "$tmp/no-hooks" "$tmp/serve-nohooks.log"; result $? "server starts (hooks disabled)"

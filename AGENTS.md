@@ -103,6 +103,13 @@ Rule guidance:
   `app.save`, `$app.findAuthRecordByEmail`). Do not use pre-0.23 examples (`new Schema`,
   `Dao`, `SchemaField`).
 
+## Drop-in migrations
+
+Users can add migrations at runtime (panel upload or `/addon_configs/<slug>/pb_migrations`),
+merged by `scripts/merge-extra.sh` on every start. When you turn such a file into part of the
+project, move it into `pocketbase/pb_migrations/` (keep its name) and regenerate
+`collections.json`; never edit `addon/<slug>/rootfs/`.
+
 ## Definition of done
 
 All of these, with output you have actually seen:
