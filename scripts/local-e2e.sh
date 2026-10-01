@@ -23,7 +23,7 @@ cleanup() { if [ -n "$pid" ]; then kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/n
 trap cleanup EXIT
 result() { if [ "$1" = 0 ]; then echo "PASS $2"; passes=$((passes + 1)); else echo "FAIL $2"; fails=$((fails + 1)); fi; }
 pe() { sed -n "s/^$1=//p" "$here/project.env" | tail -n 1 | sed 's/^"\(.*\)"$/\1/'; }
-mode() { stat -f %Lp "$1" 2>/dev/null || stat -c %a "$1"; }
+mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }  # GNU first: GNU "stat -f" means filesystem info
 wait_health() { for _ in $(seq 1 75); do curl -fs "$url/api/health" >/dev/null 2>&1 && return 0; sleep 0.2; done; return 1; }
 serve() { # data-dir migrations-dir hooks-dir log
   "$pb" serve --dir "$1" --migrationsDir "$2" --hooksDir "$3" --http "127.0.0.1:$port" > "$4" 2>&1 &
