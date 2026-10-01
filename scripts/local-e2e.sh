@@ -101,6 +101,8 @@ result $? "server starts (auto-login on, test peer 127.0.0.1)"
      "$tmp/ha.json" "$(kv admin_email)"
 result $? "ha-login through ingress returns the admin's dashboard session"
 curl -fs "$url/" | grep -q 'api/app/ha-login'; result $? "landing page (pb_public) is served at / and uses ha-login"
+curl -sI "$url/_/" | grep -i '^content-security-policy:' | grep -q "frame-ancestors 'self'"
+result $? "dashboard may be framed by its own origin (the Home Assistant panel), not by others"
 tok="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["token"])' "$tmp/ha.json")"
 setup="$(curl -s "$url/api/app/setup" -H "Authorization: $tok")"
 echo "$setup" | python3 -c 'import json,sys; d=json.load(sys.stdin); import urllib.parse as u

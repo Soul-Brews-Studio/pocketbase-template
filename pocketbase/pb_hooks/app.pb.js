@@ -80,6 +80,18 @@ $app.rootCmd.addCommand(new Command({
   },
 }))
 
+// The dashboard inside Home Assistant's sidebar panel: PocketBase adds its own CSP with
+// frame-ancestors 'none' to /_/ only when the response has none yet (apis/serve.go), so set the
+// same policy first with frame-ancestors 'self' (Home Assistant and its ingress share an origin).
+routerUse((e) => {
+  if (e.request.url.path.indexOf("/_/") === 0) {
+    e.response.header().set("Content-Security-Policy",
+      "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' http://127.0.0.1:* https://tile.openstreetmap.org data: blob:; " +
+      "connect-src 'self' http://127.0.0.1:* https://nominatim.openstreetmap.org; script-src 'self' http://127.0.0.1:*; frame-ancestors 'self'")
+  }
+  return e.next()
+})
+
 // Home Assistant auto-login for the sidebar panel (see lib/halogin.js). Off unless HA_AUTO_LOGIN=true.
 routerAdd("GET", "/api/app/ha-login", (e) => require(`${__hooks}/lib/halogin.js`).haLogin(e))
 

@@ -5,8 +5,8 @@
   Inside Home Assistant it asks ./api/app/ha-login for an admin token (granted only through the
   ingress proxy, see pb_hooks/lib/halogin.js), stores it where the PocketBase dashboard looks for
   it, and opens the dashboard: signed in to Home Assistant = signed in to PocketBase.
-  The dashboard forbids being framed (CSP frame-ancestors 'none'), so inside Home Assistant's
-  panel it opens in its own tab, already signed in; opened directly it replaces this page.
+  PocketBase's own CSP forbids framing the dashboard; pb_hooks/app.pb.js relaxes it to
+  frame-ancestors 'self', so in the panel the dashboard opens right here (↗ = its own tab).
 -->
 <html lang="en">
 <head>
@@ -34,6 +34,7 @@
   <h1>PocketBase</h1>
   <p id="status">Checking…</p>
   <a class="button" id="open" href="./_/">Open dashboard</a>
+  <a class="button" id="tab" href="./_/" target="_blank" style="display:none; margin-left:8px">↗</a>
   <p><code>API: <span id="api"></span></code></p>
   <section id="setup">
     <p><strong>Set up an app</strong>: scan, or copy the link. It holds the app login's password: share it only with your own devices.</p>
@@ -49,7 +50,7 @@
   document.getElementById("api").textContent = location.origin + base + "/api/"
   const status = (t) => (document.getElementById("status").textContent = t)
   const framed = window.top !== window   // inside Home Assistant's sidebar panel
-  if (framed) document.getElementById("open").target = "_blank"
+  if (framed) document.getElementById("tab").style.display = "inline-block"
   // the ingress URL is no use to apps (they need the published port, shown under "Set up an app")
   if (framed) document.getElementById("api").parentElement.parentElement.style.display = "none"
 
@@ -68,8 +69,7 @@
       localStorage.setItem("__pb_superusers__" + base + "/_", JSON.stringify({ token, record, model: record }))
       showSetup(token)
       if (framed) {
-        status("Signed in through Home Assistant as " + record.email + ". The dashboard opens in its own tab, already signed in.")
-        document.getElementById("open").textContent = "Open dashboard ↗"
+        status("Signed in through Home Assistant as " + record.email + ".")
       } else {
         status("Signed in through Home Assistant, opening the dashboard…")
         location.replace("./_/")
