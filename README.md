@@ -41,6 +41,7 @@ Or tell a coding agent: *"Set up this template for my project, following AGENTS.
 |---|---|
 | `pocketbase/` | migrations, hooks, `collections.json`: the part you edit |
 | `addon/<slug>/` | the image (pinned, SHA-256-verified PocketBase) and Home Assistant add-on |
+| `ui/` | an example app UI, released as `dist.zip` and served at `/` (the admin page moves to `/_setup/`) |
 | `scripts/` | provisioning, rename, e2e tests, sync, PocketBase version bump, privacy check |
 | `AGENTS.md` | instructions for AI coding agents |
 
