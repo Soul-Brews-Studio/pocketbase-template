@@ -1,0 +1,26 @@
+name: PocketBase Template
+version: "0.1.0"
+slug: pocketbase_template
+description: PocketBase backend with provisioned logins and owner-only example data
+arch:
+  - aarch64
+  - amd64
+startup: services
+boot: auto
+init: false
+# Clients talk to PocketBase directly on this port. The admin UI is served on the same port;
+# Home Assistant ingress is not used (PocketBase cannot run under a path prefix, see DOCS.md).
+ports:
+  8090/tcp: 8090
+ports_description:
+  8090/tcp: PocketBase API, realtime and admin UI (/_/)
+webui: http://[HOST]:[PORT:8090]/_/
+# pb_data and the generated credentials live in /data (persistent, included in backups).
+backup: hot
+options:
+  admin_email: admin@example.invalid
+  app_email: app@example.invalid
+schema:
+  admin_email: email
+  app_email: email
+  public_url: url?
