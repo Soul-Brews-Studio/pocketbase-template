@@ -18,9 +18,9 @@ boxes as you go (`gh issue edit`) and close it when the definition of done is me
 2. **Rename:** `scripts/rename.sh "<Project Name>" <slug> "<one-line purpose>"`.
    The slug is lowercase letters, digits and underscores (it becomes the Home Assistant add-on
    slug). The script prints every file it changed.
-3. **README:** rewrite the title paragraph and the bullet list for the project. Keep the
-   sections *Quick start*, *Make it your project* (shorten it), *Home Assistant add-on*, *Use an
-   existing PocketBase instead*, *Tests*, *Security notes*, *License*. Replace `notes` mentions.
+3. **README:** rewrite the title and the first paragraph for the project, point the CI badge at
+   this repo (`gh repo view --json nameWithOwner`), and replace `notes` mentions. Keep it short:
+   details belong in `docs/`.
 4. **Schema:** replace the `notes` example (see *Add a collection* below): edit
    `pocketbase/pb_migrations/0001_init.js` while nothing has shipped; after the first deploy, add a NEW
    migration file instead of editing old ones.

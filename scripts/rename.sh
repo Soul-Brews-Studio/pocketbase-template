@@ -40,9 +40,10 @@ sub compose.yaml -e "s|^name: .*|name: $dash|" -e "s|(context: \./addon/).*|\1$s
 # every mention of the old name in the docs (title, banner sample, add-on store entry)
 esc_old="$(printf '%s' "$old_name" | sed 's/[.[\*^$/]/\\&/g')"
 sub README.md -e "1s|^# .*|# $name|" -e "s|$esc_old|$name|g"
+for d in docs/*.md; do [ -f "$d" ] && sub "$d" -e "s|$esc_old|$name|g" -e "s|addon/$old_slug/|addon/$slug/|g"; done
 sub "$a/DOCS.md" -e "1s|^# .*|# $name|" -e "s|$esc_old|$name|g"
 printf '# Changelog\n\n## 0.1.0\n\n- First version of %s, from the PocketBase backend template.\n' "$name" > "$a/CHANGELOG.md"
-changed+=("$a/config.yaml" "$a/build.yaml" "$a/DOCS.md" "$a/CHANGELOG.md" repository.yaml compose.yaml "README.md (title)")
+changed+=("$a/config.yaml" "$a/build.yaml" "$a/DOCS.md" "$a/CHANGELOG.md" repository.yaml compose.yaml "README.md (title)" "docs/*.md (name, add-on path)")
 
 scripts/sync-addon.sh >/dev/null
 changed+=("$a/rootfs (synced)")
