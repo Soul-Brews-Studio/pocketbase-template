@@ -174,6 +174,33 @@ The add-on's log shows the swap (`ui-update: ui-v0.1.0 -> ui-v0.1.1`) and no new
 
   ![The update dialog with the changelog for 0.1.2 and 0.1.1](images/08-update-dialog.png)
 
+## Deploy from your machine: `scripts/ha-deploy.mjs`
+
+Steps 1, 2 and 4 in one command, from a checkout of the repository: it adds the repository if
+Home Assistant does not have it, reloads the store, installs or updates the add-on, **starts** it,
+and waits until PocketBase answers on the published port.
+
+```sh
+scripts/ha-deploy.mjs --ha http://homeassistant.local:8123            # install / update + start
+scripts/ha-deploy.mjs --ha http://homeassistant.local:8123 --wait     # right after a git push
+scripts/ha-deploy.mjs --ha http://homeassistant.local:8123 --logs     # + the log, passwords masked
+```
+
+`--wait` first waits until Home Assistant's store shows this checkout's version (`config.yaml`)
+and the GHCR image for the host's architecture exists, so a push, the automatic release and the
+update become one step. `--port N` publishes the API on another host port.
+
+It talks to Home Assistant's websocket API as an admin user, with a **long-lived access token**:
+your profile → **Security** → **Long-lived access tokens** → **Create token**. Keep it in a file
+only you can read and never paste it anywhere else:
+
+```sh
+mkdir -p ~/.config/ha-deploy && pbpaste > ~/.config/ha-deploy/homeassistant.token && chmod 600 ~/.config/ha-deploy/homeassistant.token
+```
+
+(The file is named after the first part of the host name: `homeassistant.local` →
+`homeassistant.token`. `--token-file` or `HA_TOKEN` point elsewhere.) Node 22 or newer.
+
 ## Starting over
 
 **⋮ → Uninstall** deletes the add-on **and its data**: the database, the generated credentials
