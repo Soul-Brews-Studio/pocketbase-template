@@ -12,7 +12,11 @@ Work through this list once to finish the setup; an AI coding agent can do it fo
 - [ ] **Regenerate:** `scripts/export-collections.sh` and `scripts/sync-addon.sh`
 - [ ] **Verify:** `scripts/local-e2e.sh` → `LOCAL E2E: ALL PASS`, `python3 scripts/privacy_check.py`
 - [ ] **Run it:** `docker compose up --build -d`, logins in `docker compose logs` (shown once)
-- [ ] Optional: install as a Home Assistant add-on (README → *Home Assistant add-on*)
+- [ ] **Home Assistant:** in a public repo the init workflow switched the add-on to a prebuilt GHCR
+      image and started `addon-image`. GHCR packages start **private**: once that run is green, open
+      [your packages](https://github.com/__OWNER__?tab=packages) → each `*-addon-*` package →
+      *Package settings* → *Change visibility* → **Public** (the API cannot do it). Then use the
+      README's *Add the repository* button; the add-on appears in the sidebar and signs you in.
 
 ## Let an AI do it
 

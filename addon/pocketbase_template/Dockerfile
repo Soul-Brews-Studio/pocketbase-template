@@ -1,12 +1,17 @@
 # check=error=true
-# One image, two uses: `docker compose up` (standalone) and a Home Assistant add-on.
-# Home Assistant passes BUILD_FROM/BUILD_ARCH from build.yaml. Standalone builds (compose, plain
-# `docker build`) fall back to the multi-arch Home Assistant base image and the build machine's
-# architecture.
+# One image, three uses: `docker compose up` (standalone), a Home Assistant add-on built on the
+# device, and the prebuilt GHCR image (.github/workflows/addon-image.yml). Everything is set here
+# (no build.yaml, which Home Assistant deprecates): the multi-arch Home Assistant base image, and
+# the architecture from BUILD_ARCH (passed by Home Assistant and the workflow) or the build machine.
 ARG BUILD_FROM=ghcr.io/home-assistant/base:3.22
 FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH=""
+ARG BUILD_VERSION=""
+LABEL org.opencontainers.image.title="PocketBase Template" \
+      org.opencontainers.image.description="PocketBase backend with provisioned logins and owner-only example data" \
+      org.opencontainers.image.licenses="MIT" \
+      io.hass.type="addon"
 # Official PocketBase release, verified against the SHA-256 values published in the release's
 # checksums.txt. Change all three together with scripts/bump-pocketbase.sh <version>.
 ARG POCKETBASE_VERSION=0.40.4

@@ -26,7 +26,8 @@ pe() { sed -n "s/^$1=//p" "$here/project.env" | tail -n 1 | sed 's/^"\(.*\)"$/\1
 mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }  # GNU first: GNU "stat -f" means filesystem info
 wait_health() { for _ in $(seq 1 75); do curl -fs "$url/api/health" >/dev/null 2>&1 && return 0; sleep 0.2; done; return 1; }
 serve() { # data-dir migrations-dir hooks-dir log
-  "$pb" serve --dir "$1" --migrationsDir "$2" --hooksDir "$3" --http "127.0.0.1:$port" > "$4" 2>&1 &
+  "$pb" serve --dir "$1" --migrationsDir "$2" --hooksDir "$3" --publicDir "$here/pocketbase/pb_public" \
+    --http "127.0.0.1:$port" > "$4" 2>&1 &
   pid=$!
   wait_health
 }
@@ -79,6 +80,29 @@ code="$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/api/collections/use
 PB_URL="$url" PB_ADMIN_EMAIL="$(kv admin_email)" PB_ADMIN_PASSWORD="$(kv admin_password)" \
   PB_APP_EMAIL="$(kv app_email)" PB_APP_PASSWORD="$changed" e2e
 result $? "e2e.mjs (migrations + hooks, provisioned logins)"
+stop
+
+# --- 2b. Home Assistant sidebar auto-login (pb_hooks/lib/halogin.js) ---------------------------
+# The trusted ingress peer is 127.0.0.1 here (172.30.32.2 in Home Assistant).
+ha() { curl -s -o "$tmp/ha.json" -w '%{http_code}' "$url/api/app/ha-login" "$@"; }
+ING=(-H 'X-Ingress-Path: /api/hassio_ingress/test')
+HA_AUTO_LOGIN=true HA_INGRESS_PEER=127.0.0.1 HA_USER_IDS=ha-user-1 ADMIN_EMAIL="$(kv admin_email)" \
+  serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-ha.log"
+result $? "server starts (auto-login on, test peer 127.0.0.1)"
+[ "$(ha)" = 403 ]; result $? "ha-login without Home Assistant headers is refused"
+[ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: ha-user-2')" = 403 ]; result $? "ha-login refuses a user outside ha_user_ids"
+[ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: ha-user-1')" = 200 ] \
+  && python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d["token"] and d["record"]["email"]==sys.argv[2] and d["record"]["collectionName"]=="_superusers"' \
+     "$tmp/ha.json" "$(kv admin_email)"
+result $? "ha-login through ingress returns the admin's dashboard session"
+curl -fs "$url/" | grep -q 'api/app/ha-login'; result $? "landing page (pb_public) is served at / and uses ha-login"
+stop
+HA_AUTO_LOGIN=true HA_INGRESS_PEER=192.0.2.1 ADMIN_EMAIL="$(kv admin_email)" \
+  serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-ha2.log"
+[ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: ha-user-1')" = 403 ]; result $? "ha-login refuses the same headers from any other peer (the published port)"
+stop
+serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-ha3.log"
+[ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: ha-user-1')" = 404 ]; result $? "ha-login is off unless HA_AUTO_LOGIN=true (standalone)"
 stop
 
 # --- 3. same schema, hooks disabled ------------------------------------------------------------

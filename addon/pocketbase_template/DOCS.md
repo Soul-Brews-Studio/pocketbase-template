@@ -23,8 +23,10 @@ on one port, with the project's collections and access rules already set up.
    ==================================================================
    ```
 
-6. **Open web UI** opens the PocketBase admin UI; sign in with the admin login. Change the
-   passwords there if you like: later starts never reset them.
+6. **The sidebar panel** (or **Open web UI**) opens the PocketBase dashboard and, with
+   `auto_login` on, signs you in as the admin: no second password. Change the passwords in the
+   dashboard if you like; later starts never reset them. Through the port (`:8090/_/`) you sign in
+   with the admin login.
 7. Point your app or client at the API base with the app login.
 
 Passwords are always generated randomly on the first start; there is no password option. Later
@@ -40,6 +42,8 @@ over with new credentials and an **empty database**.
 | `admin_email` | `admin@example.invalid` | PocketBase superuser (admin UI) |
 | `app_email` | `app@example.invalid` | the app login (a `users` record) |
 | `public_url` | empty | URL shown in the banner; default `http://homeassistant.local:<port>` |
+| `auto_login` | `true` | signed in to Home Assistant = signed in to the dashboard, from the sidebar panel only |
+| `ha_user_ids` | empty | optional comma-separated Home Assistant user ids allowed to auto-login (empty: any) |
 
 Changing an email later creates that login with a new random password, printed once in the log.
 
@@ -50,9 +54,12 @@ More logins: admin UI → **Collections → users → New record**, with email, 
 
 - Port `8090/tcp` carries the REST API, the realtime stream and the admin UI. Change the host
   port in the **Network** section of the Configuration tab.
-- **Why not ingress:** clients must reach PocketBase directly (ingress only admits a signed-in
-  Home Assistant browser session), and PocketBase cannot run under a path prefix such as the
-  ingress path, so the admin UI is opened on the same port via **Open web UI**.
+- **Sidebar and auto-login:** the panel goes through Home Assistant ingress. Auto-login is
+  granted only when the connection comes from Supervisor's ingress proxy (172.30.32.2) with a
+  Home Assistant user id; the same headers sent to the published port are refused. Turn it off
+  with `auto_login: false`, or limit it with `ha_user_ids`.
+- Apps and devices use the published port directly (ingress only admits a signed-in Home
+  Assistant browser session).
 - The port speaks plain HTTP. That is fine on a home network. For use from outside, do not
   forward the port: put it behind HTTPS (a reverse proxy with a certificate, or a tunnel/VPN)
   so logins and data are encrypted.

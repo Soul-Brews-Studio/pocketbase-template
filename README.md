@@ -11,7 +11,7 @@
 
 A new [PocketBase](https://pocketbase.io) backend per project, in one click: **Use this
 template**, then `docker compose up --build`. Logins are provisioned on first start, and the same
-image installs as a Home Assistant add-on.
+image installs as a Home Assistant add-on with a sidebar panel that signs you in, prebuilt on GHCR.
 
 ## Quick start
 

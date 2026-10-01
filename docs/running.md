@@ -12,10 +12,21 @@ pocketbase serve --dir pocketbase/pb_data \
 
 ## As a Home Assistant add-on
 
-The repository root is also a Home Assistant add-on repository. In Home Assistant: **Settings →
-Add-ons → Add-on store → ⋮ → Repositories**, add `https://github.com/<you>/<repo>`, install
-the add-on, start it, and read the **Log** tab for the logins. Details in
-[`addon/pocketbase_template/DOCS.md`](addon/pocketbase_template/DOCS.md).
+The repository root is also a Home Assistant add-on repository: use the README's **Add the
+repository** button (or **Settings → Add-ons → Add-on store → ⋮ → Repositories** and the repo
+URL), install, start, and read the **Log** tab for the logins.
+
+- **Sidebar panel with auto-login:** the add-on appears in the sidebar; opening it signs a Home
+  Assistant user in to the PocketBase dashboard as the admin (`auto_login`, trusted only from
+  Supervisor's ingress proxy). The landing page is `pocketbase/pb_public/index.html`.
+- **Prebuilt image (public repos):** the init workflow sets `image:` in the add-on's
+  `config.yaml` and `.github/workflows/addon-image.yml` pushes
+  `ghcr.io/<owner>/{arch}-addon-<slug>` for amd64 and aarch64, so Home Assistant pulls instead of
+  building. **GHCR packages start private**: after the first run, set each package to *Public*
+  (Packages → package → Package settings → Change visibility). Release a new image by bumping
+  `version:` in `config.yaml`. Private repos have no `image:` line and build on the device.
+
+Details in [`addon/pocketbase_template/DOCS.md`](../addon/pocketbase_template/DOCS.md).
 
 ## On an existing PocketBase
 

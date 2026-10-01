@@ -37,6 +37,9 @@ $app.rootCmd.addCommand(new Command({
   },
 }))
 
+// Home Assistant auto-login for the sidebar panel (see lib/halogin.js). Off unless HA_AUTO_LOGIN=true.
+routerAdd("GET", "/api/app/ha-login", (e) => require(`${__hooks}/lib/halogin.js`).haLogin(e))
+
 // Example hook (disabled): trim note titles before they are saved. Uncomment to try it; the
 // e2e tests do not depend on it.
 //

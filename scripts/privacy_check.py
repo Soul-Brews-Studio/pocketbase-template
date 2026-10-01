@@ -51,6 +51,8 @@ for name in sorted(set(names) - {""}):
         text = path.read_text(encoding="utf-8")
     except UnicodeDecodeError:
         continue
+    # Home Assistant's fixed Supervisor network (the same on every install), not a private host.
+    text = re.sub(r"\b172\.30\.32\.[12]\b", "<ha-supervisor>", text)
     for label, pattern in rules.items():
         if re.search(pattern, text):
             failures.append(f"{name}: {label}")

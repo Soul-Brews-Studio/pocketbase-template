@@ -34,7 +34,8 @@ if [ "$old_slug" != "$slug" ] && [ -d "addon/$old_slug" ]; then
 fi
 a="addon/$slug"
 sub "$a/config.yaml" -e "s|^name: .*|name: $name|" -e "s|^slug: .*|slug: $slug|" -e "s|^description: .*|description: $desc|"
-sub "$a/build.yaml" -e "s|(org.opencontainers.image.title: ).*|\1$name|" -e "s|(org.opencontainers.image.description: ).*|\1$desc|"
+sub "$a/config.yaml" -e "s|^panel_title: .*|panel_title: $name|"
+sub "$a/Dockerfile" -e "s|(org.opencontainers.image.title=)\"[^\"]*\"|\1\"$name\"|" -e "s|(org.opencontainers.image.description=)\"[^\"]*\"|\1\"$desc\"|"
 sub repository.yaml -e "s|^name: .*|name: $name add-ons|" -e "s|^maintainer: .*|maintainer: $name maintainers|"
 sub compose.yaml -e "s|^name: .*|name: $dash|" -e "s|(context: \./addon/).*|\1$slug|" -e "s|(image: ).*:dev|\1$dash:dev|"
 # every mention of the old name in the docs (title, banner sample, add-on store entry)
@@ -43,7 +44,7 @@ sub README.md -e "1s|^# .*|# $name|" -e "s|$esc_old|$name|g"
 for d in docs/*.md; do [ -f "$d" ] && sub "$d" -e "s|$esc_old|$name|g" -e "s|addon/$old_slug/|addon/$slug/|g"; done
 sub "$a/DOCS.md" -e "1s|^# .*|# $name|" -e "s|$esc_old|$name|g"
 printf '# Changelog\n\n## 0.1.0\n\n- First version of %s, from the PocketBase backend template.\n' "$name" > "$a/CHANGELOG.md"
-changed+=("$a/config.yaml" "$a/build.yaml" "$a/DOCS.md" "$a/CHANGELOG.md" repository.yaml compose.yaml "README.md (title)" "docs/*.md (name, add-on path)")
+changed+=("$a/config.yaml" "$a/Dockerfile (labels)" "$a/DOCS.md" "$a/CHANGELOG.md" repository.yaml compose.yaml "README.md (title)" "docs/*.md (name, add-on path)")
 
 scripts/sync-addon.sh >/dev/null
 changed+=("$a/rootfs (synced)")

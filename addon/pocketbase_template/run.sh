@@ -28,12 +28,17 @@ if [ -n "${SUPERVISOR_TOKEN:-}" ] && bashio::supervisor.ping >/dev/null 2>&1; th
     port="$(bashio::addon.port '8090/tcp')"
     url="http://homeassistant.local:${port:-8090}"
   fi
+  # sidebar panel auto-login (pb_hooks/lib/halogin.js): trusted only from the ingress proxy
+  export HA_AUTO_LOGIN="$(bashio::config 'auto_login')"
+  export HA_USER_IDS="$(bashio::config 'ha_user_ids')"
 else
   bashio::log.info "Mode: standalone (no Supervisor; options from environment variables)"
   admin_email="${ADMIN_EMAIL:-$(pe ADMIN_EMAIL)}"
   app_email="${APP_USER_EMAIL:-$(pe APP_USER_EMAIL)}"
   url="${PUBLIC_URL:-http://127.0.0.1:${PORT:-$(pe DEFAULT_PORT)}}"
+  export HA_AUTO_LOGIN=false   # no Home Assistant, no ingress: never auto-login
 fi
+export ADMIN_EMAIL="$admin_email"
 
 bashio::log.info "Provisioning ${project_name} (admin ${admin_email}, app login ${app_email})"
 "$app/provision.sh" --dir "$data" --state-dir /data \
@@ -47,5 +52,6 @@ exec pocketbase serve \
   --dir "$data" \
   --migrationsDir "$app/pb_migrations" \
   --hooksDir "$app/pb_hooks" \
+  --publicDir "$app/pb_public" \
   --hooksWatch=false \
   --automigrate=false
