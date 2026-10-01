@@ -6,7 +6,7 @@ turn it into your project; an AI coding agent can do it for you (see the bottom)
 - [ ] **Name it:** `scripts/rename.sh "<Project Name>" <slug> "<one-line purpose>"`
       (slug: lowercase letters, digits, underscores)
 - [ ] **README:** rewrite the intro for this project
-- [ ] **Schema:** replace the example `notes` collection in `pb_migrations/` with your own
+- [ ] **Schema:** replace the example `notes` collection in `pocketbase/pb_migrations/` with your own
       collections and owner rules (pattern in `AGENTS.md` → *Add a collection*)
 - [ ] **Tests:** matching checks in `scripts/e2e.mjs`
 - [ ] **Regenerate:** `scripts/export-collections.sh` and `scripts/sync-addon.sh`

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Regenerate collections.json from pb_migrations/: migrate a throwaway PocketBase, export every
+# Regenerate collections.json from pocketbase/pb_migrations/: migrate a throwaway PocketBase, export every
 # non-system collection in the Dashboard "Import collections" format, stop, delete it.
-# Run after changing pb_migrations/ (e2e.mjs fails when the file and the schema differ).
+# Run after changing pocketbase/pb_migrations/ (e2e.mjs fails when the file and the schema differ).
 # The `users` collection is left out on purpose: an existing PocketBase keeps its own.
 # Needs: pocketbase on PATH (or $POCKETBASE), python3, curl.
 set -euo pipefail
@@ -12,12 +12,12 @@ port="$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); p
 pid=""
 trap 'if [ -n "$pid" ]; then kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/null; fi; rm -rf "$tmp"' EXIT
 pass="export-$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9')"
-"$pb" superuser upsert export@example.invalid "$pass" --dir "$tmp" --migrationsDir "$here/pb_migrations" >/dev/null
-"$pb" serve --dir "$tmp" --migrationsDir "$here/pb_migrations" --hooksDir "$tmp/no-hooks" \
+"$pb" superuser upsert export@example.invalid "$pass" --dir "$tmp" --migrationsDir "$here/pocketbase/pb_migrations" >/dev/null
+"$pb" serve --dir "$tmp" --migrationsDir "$here/pocketbase/pb_migrations" --hooksDir "$tmp/no-hooks" \
   --http "127.0.0.1:$port" >/dev/null 2>&1 &
 pid=$!
 for _ in $(seq 1 75); do curl -fs "http://127.0.0.1:$port/api/health" >/dev/null 2>&1 && break; sleep 0.2; done
-PB="http://127.0.0.1:$port" PASS="$pass" OUT="$here/collections.json" python3 - <<'PY'
+PB="http://127.0.0.1:$port" PASS="$pass" OUT="$here/pocketbase/collections.json" python3 - <<'PY'
 import json, os, urllib.request
 base = os.environ["PB"]
 def req(path, body=None, token=None):

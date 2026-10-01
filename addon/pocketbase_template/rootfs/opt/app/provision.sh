@@ -15,10 +15,10 @@
 # Usage: scripts/provision.sh [options]
 #   --admin-email E       default ADMIN_EMAIL from project.env
 #   --app-email E         default APP_USER_EMAIL from project.env
-#   --dir D               PocketBase data dir          (default ./pb_data)
+#   --dir D               PocketBase data dir          (default pocketbase/pb_data)
 #   --state-dir D         credentials + marker files   (default = --dir)
-#   --migrations-dir D    default ./pb_migrations
-#   --hooks-dir D         default ./pb_hooks (must contain the app-user command)
+#   --migrations-dir D    default pocketbase/pb_migrations
+#   --hooks-dir D         default pocketbase/pb_hooks (must contain the app-user command)
 #   --url U               public base URL for the banner (default http://127.0.0.1:DEFAULT_PORT)
 #   --project-name N      banner title (default PROJECT_NAME from project.env)
 #   --pocketbase BIN      default: pocketbase on PATH (or $POCKETBASE)
@@ -26,7 +26,7 @@ set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 # Repo layout: scripts/provision.sh + ./project.env. Container layout: /opt/app/{provision.sh,project.env}.
-if [ -f "$here/project.env" ]; then root="$here"; else root="$(cd "$here/.." && pwd)"; fi
+if [ -f "$here/project.env" ]; then root="$here"; pbdir="$here"; else root="$(cd "$here/.." && pwd)"; pbdir="$root/pocketbase"; fi
 
 # Read KEY from project.env (KEY=value or KEY="value"); never sources the file.
 pe() { [ -f "$root/project.env" ] && sed -n "s/^$1=//p" "$root/project.env" | tail -n 1 | sed 's/^"\(.*\)"$/\1/' || true; }
@@ -36,10 +36,10 @@ admin_email="$(pe ADMIN_EMAIL)"; admin_email="${admin_email:-admin@example.inval
 app_email="$(pe APP_USER_EMAIL)"; app_email="${app_email:-app@example.invalid}"
 port="$(pe DEFAULT_PORT)"
 base_url="http://127.0.0.1:${port:-8090}"
-data_dir="$root/pb_data"
+data_dir="$pbdir/pb_data"
 state_dir=""
-migrations_dir="$root/pb_migrations"
-hooks_dir="$root/pb_hooks"
+migrations_dir="$pbdir/pb_migrations"
+hooks_dir="$pbdir/pb_hooks"
 pb="${POCKETBASE:-pocketbase}"
 
 while [ $# -gt 0 ]; do

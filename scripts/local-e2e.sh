@@ -66,13 +66,13 @@ result $? "second run is idempotent (nothing regenerated or printed)"
 
 # A password changed later (as if in the admin UI) must survive the next provisioning.
 changed="changed-$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9')"
-"$pb" app-user "$(kv app_email)" "$changed" --dir "$data" --migrationsDir "$here/pb_migrations" \
-  --hooksDir "$here/pb_hooks" >/dev/null
+"$pb" app-user "$(kv app_email)" "$changed" --dir "$data" --migrationsDir "$here/pocketbase/pb_migrations" \
+  --hooksDir "$here/pocketbase/pb_hooks" >/dev/null
 POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$data" --url "$url" >/dev/null; rc=$?
 result "$rc" "provision after a password change"
 
 # --- 2. migrations + hooks ---------------------------------------------------------------------
-serve "$data" "$here/pb_migrations" "$here/pb_hooks" "$tmp/serve.log"; result $? "server starts (migrations + hooks)"
+serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve.log"; result $? "server starts (migrations + hooks)"
 code="$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/api/collections/users/auth-with-password" \
   -H 'Content-Type: application/json' -d "{\"identity\":\"$(kv app_email)\",\"password\":\"$changed\"}")"
 [ "$code" = 200 ]; result $? "later-changed app password was not reset by provisioning"
@@ -83,7 +83,7 @@ stop
 
 # --- 3. same schema, hooks disabled ------------------------------------------------------------
 mkdir -p "$tmp/no-hooks"
-serve "$data" "$here/pb_migrations" "$tmp/no-hooks" "$tmp/serve-nohooks.log"; result $? "server starts (hooks disabled)"
+serve "$data" "$here/pocketbase/pb_migrations" "$tmp/no-hooks" "$tmp/serve-nohooks.log"; result $? "server starts (hooks disabled)"
 PB_URL="$url" PB_ADMIN_EMAIL="$(kv admin_email)" PB_ADMIN_PASSWORD="$(kv admin_password)" NO_HOOKS=1 e2e
 result $? "e2e.mjs with hooks disabled"
 stop
@@ -96,7 +96,7 @@ spass="shared-$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9')"
 "$pb" superuser upsert shared-admin@example.invalid "$spass" --dir "$shared/data" \
   --migrationsDir "$shared/no-migrations" >/dev/null
 serve "$shared/data" "$shared/no-migrations" "$tmp/no-hooks" "$tmp/serve-shared.log"; result $? "plain server starts"
-PB="$url" PASS="$spass" JSONFILE="$here/collections.json" python3 - <<'PY'
+PB="$url" PASS="$spass" JSONFILE="$here/pocketbase/collections.json" python3 - <<'PY'
 import json, os, sys, urllib.request
 base = os.environ["PB"]
 token_req = urllib.request.Request(base + "/api/collections/_superusers/auth-with-password",

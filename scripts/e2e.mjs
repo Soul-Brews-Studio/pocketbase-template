@@ -116,7 +116,7 @@ async function realtime(token, topics) {
 // collections.json (for "Import collections" on an existing PocketBase) must match what the
 // migrations produced on this server: fields, types, options, rules, indexes, ids.
 async function collectionsJsonCheck(token) {
-  const file = join(dirname(fileURLToPath(import.meta.url)), "..", "collections.json")
+  const file = join(dirname(fileURLToPath(import.meta.url)), "..", "pocketbase", "collections.json")
   const wanted = JSON.parse(readFileSync(file, "utf8"))
   const canon = (v) => Array.isArray(v) ? v.map(canon)
     : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().filter((k) => k !== "created" && k !== "updated").map((k) => [k, canon(v[k])]))

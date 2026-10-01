@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copy the one source of truth into the add-on's image context:
-#   project.env, pb_migrations/, pb_hooks/, scripts/provision.sh -> addon/<ADDON_SLUG>/rootfs/opt/app/
+#   project.env, pocketbase/pb_migrations/, pocketbase/pb_hooks/, scripts/provision.sh -> addon/<ADDON_SLUG>/rootfs/opt/app/
 # Run after changing any of them; `--check` only compares (CI and local-e2e.sh use it).
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
@@ -11,7 +11,7 @@ dest="$here/addon/$slug/rootfs/opt/app"
 
 stage="$(mktemp -d)"; trap 'rm -rf "$stage"' EXIT
 cp "$here/project.env" "$here/scripts/provision.sh" "$stage/"
-cp -R "$here/pb_migrations" "$here/pb_hooks" "$stage/"
+cp -R "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$stage/"
 
 if [ "${1:-}" = "--check" ]; then
   if diff -r "$stage" "$dest" >/dev/null 2>&1; then echo "add-on is in sync"; exit 0; fi
