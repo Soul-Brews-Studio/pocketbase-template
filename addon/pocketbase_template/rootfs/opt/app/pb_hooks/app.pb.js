@@ -37,6 +37,21 @@ $app.rootCmd.addCommand(new Command({
   },
 }))
 
+// Console command used by scripts/provision.sh on every start: the dashboard's app name and the
+// public URL (Settings → Application), so the dashboard says the project's name, not "Acme".
+//   pocketbase app-meta <name> <url> --dir ... --migrationsDir ... --hooksDir ...
+$app.rootCmd.addCommand(new Command({
+  use: "app-meta <name> <url>",
+  short: "Set the application name and URL",
+  run: (cmd, args) => {
+    if (!args || args.length !== 2) throw new Error("usage: app-meta <name> <url>")
+    const settings = $app.settings()
+    settings.meta.appName = args[0]
+    settings.meta.appURL = args[1]
+    $app.save(settings)
+  },
+}))
+
 // Console command used by scripts/provision.sh on the first start: load starter records from
 // <dir>/<collection>.json (an array of field objects). The value "@app" in any field is replaced
 // by the app login's record id (e.g. "owner": "@app"). Run once; provision.sh keeps a marker.

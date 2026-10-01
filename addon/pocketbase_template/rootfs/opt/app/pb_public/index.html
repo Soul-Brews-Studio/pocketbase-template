@@ -50,6 +50,8 @@
   const status = (t) => (document.getElementById("status").textContent = t)
   const framed = window.top !== window   // inside Home Assistant's sidebar panel
   if (framed) document.getElementById("open").target = "_blank"
+  // the ingress URL is no use to apps (they need the published port, shown under "Set up an app")
+  if (framed) document.getElementById("api").parentElement.parentElement.style.display = "none"
 
   fetch("./api/app/ha-login", { credentials: "same-origin" })
     .then(async (r) => {
