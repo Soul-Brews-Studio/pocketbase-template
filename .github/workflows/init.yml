@@ -1,6 +1,7 @@
 # Runs in a repository created from the template, never in the template itself:
 #   1. names the project after the repository, once: `catlab-bro` -> "Catlab Bro" / catlab_bro
-#      (scripts/rename.sh, committed by github-actions), so nothing says "PocketBase Template";
+#      (scripts/rename.sh), points the Home Assistant links (repository.yaml `url:`, README
+#      buttons) at this repository, and commits that as github-actions;
 #   2. opens the "Set up this backend" issue with the rest of the checklist, once (it looks for
 #      the `setup` label first).
 name: init
@@ -21,25 +22,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Name the project after the repository (once)
+      - name: Name the project after the repository (once) and point the Home Assistant links here
         env:
           REPO_NAME: ${{ github.event.repository.name }}
           REPO: ${{ github.repository }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
         run: |
           set -euo pipefail
-          if ! grep -q '^PROJECT_SLUG=pocketbase_template$' project.env; then
-            echo "already named: $(grep '^PROJECT_NAME=' project.env)"; exit 0
+          if grep -q '^PROJECT_SLUG=pocketbase_template$' project.env; then
+            # catlab-bro -> slug catlab_bro, name "Catlab Bro"
+            slug=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+|_+$//g; s/^([0-9])/p_\1/')
+            name=$(echo "$REPO_NAME" | sed -E 's/[-_.]+/ /g' | awk '{for (i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
+            scripts/rename.sh "$name" "$slug" "PocketBase backend for $name"
+            msg="Name the project \"$name\" ($slug) after the repository"
+          else
+            msg="Point the Home Assistant links at $REPO"
           fi
-          # catlab-bro -> slug catlab_bro, name "Catlab Bro"
-          slug=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+|_+$//g; s/^([0-9])/p_\1/')
-          name=$(echo "$REPO_NAME" | sed -E 's/[-_.]+/ /g' | awk '{for (i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
-          scripts/rename.sh "$name" "$slug" "PocketBase backend for $name"
+          scripts/ha-buttons.sh "$REPO_URL"
           # the CI badge points at this repository
           sed -i "s#Soul-Brews-Studio/pocketbase-template/actions#$REPO/actions#g" README.md
+          if [ -z "$(git status --porcelain)" ]; then echo "nothing to change"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Name the project \"$name\" ($slug) after the repository"
+          git commit -m "$msg"
           git push
 
       - name: Open the setup issue (once)

@@ -47,6 +47,9 @@ changed+=("$a/config.yaml" "$a/build.yaml" "$a/DOCS.md" "$a/CHANGELOG.md" reposi
 
 scripts/sync-addon.sh >/dev/null
 changed+=("$a/rootfs (synced)")
+# the "open the add-on" button carries the slug: re-point the Home Assistant links
+repo_url="$(sed -n 's/^url: *//p' repository.yaml)"
+if [ -n "$repo_url" ]; then scripts/ha-buttons.sh "$repo_url" >/dev/null; changed+=("README.md + repository.yaml (Home Assistant links)"); fi
 printf 'renamed "%s" (%s) -> "%s" (%s)\n' "$old_name" "$old_slug" "$name" "$slug"
 printf '  %s\n' "${changed[@]}"
 echo "Next: rewrite the README intro, replace the example collection (AGENTS.md), run scripts/local-e2e.sh."

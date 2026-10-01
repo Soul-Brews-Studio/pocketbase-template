@@ -11,6 +11,7 @@
 │   ├── provision.sh            first-start logins, random passwords, idempotent
 │   ├── e2e.mjs, local-e2e.sh   provisioning, rules, realtime and import tests
 │   ├── rename.sh               give the project its own name
+│   ├── ha-buttons.sh           point the Home Assistant links (repository.yaml, README) at a repo URL
 │   ├── sync-addon.sh           copy pocketbase/ into the add-on (--check compares)
 │   ├── export-collections.sh   regenerate collections.json
 │   ├── bump-pocketbase.sh      pin a new PocketBase version + checksums

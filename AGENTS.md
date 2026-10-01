@@ -24,7 +24,8 @@ the work, and list your open questions in the PR description.
    `scripts/rename.sh "<Project Name>" <slug> "<one-line purpose>"`. The slug is lowercase
    letters, digits and underscores (it becomes the Home Assistant add-on slug).
 3. **README:** rewrite the title and the first paragraph for the project, point the CI badge at
-   this repo (`gh repo view --json nameWithOwner`), and replace `notes` mentions. Keep it short:
+   this repo (`gh repo view --json nameWithOwner`), and replace `notes` mentions. Keep the
+   `<!-- ha-buttons -->` block; if the repo moved, run `scripts/ha-buttons.sh <repo URL>`. Keep it short:
    details belong in `docs/`.
 4. **Schema:** replace the `notes` example (see *Add a collection* below): edit
    `pocketbase/pb_migrations/0001_init.js` while nothing has shipped; after the first deploy, add a NEW
