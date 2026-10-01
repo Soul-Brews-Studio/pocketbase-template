@@ -7,6 +7,8 @@ changing anything.
 ## First run: turn the template into the project
 
 Do this once, in order, when `project.env` still says `PROJECT_SLUG=pocketbase_template`.
+The repo's open issue labelled `setup` ("Set up this backend") holds the same checklist: tick its
+boxes as you go (`gh issue edit`) and close it when the definition of done is met.
 
 1. **Ask the human** (one message, all questions together):
    - the project name and a one-line purpose,

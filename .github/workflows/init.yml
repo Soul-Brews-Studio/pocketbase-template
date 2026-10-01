@@ -1,0 +1,35 @@
+# Runs once in a repository created from the template: opens the "Set up this backend" issue
+# with the first-run checklist (.github/setup-issue.md). Does nothing in the template itself,
+# and never opens a second issue (it looks for the `setup` label first).
+name: init
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  setup-issue:
+    if: github.repository != 'Soul-Brews-Studio/pocketbase-template'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Open the setup issue (once)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh issue list -R "$REPO" --label setup --state all --limit 1 --json number --jq '.[0].number' | grep -q .; then
+            echo "setup issue already exists"; exit 0
+          fi
+          gh label create setup -R "$REPO" --color 0E8A16 --description "First-run setup from the template" 2>/dev/null || true
+          url=$(gh issue create -R "$REPO" --title "Set up this backend" --label setup --body-file .github/setup-issue.md)
+          n="${url##*/}"
+          sed "s/__ISSUE__/$n/" .github/setup-issue.md > /tmp/body.md
+          gh issue edit "$n" -R "$REPO" --body-file /tmp/body.md
+          echo "opened $url"

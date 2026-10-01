@@ -51,6 +51,9 @@ put HTTPS in front (reverse proxy or tunnel).
 4. `scripts/export-collections.sh` → `collections.json`, then `scripts/sync-addon.sh`.
 5. `scripts/local-e2e.sh` until everything passes.
 
+A repo made from the template opens a **"Set up this backend"** issue by itself on its first push
+(`.github/workflows/init.yml`) with this checklist, so you, or an agent, can work through it.
+
 Or let an AI do it: open the repo in Claude Code, Codex or another agent and say
 *"set this template up for &lt;project&gt;"*. It follows [`AGENTS.md`](AGENTS.md).
 
