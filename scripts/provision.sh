@@ -39,8 +39,8 @@ if [ -f "$here/project.env" ]; then root="$here"; pbdir="$here"; else root="$(cd
 pe() { [ -f "$root/project.env" ] && sed -n "s/^$1=//p" "$root/project.env" | tail -n 1 | sed 's/^"\(.*\)"$/\1/' || true; }
 
 project_name="$(pe PROJECT_NAME)"; project_name="${project_name:-PocketBase}"
-admin_email="$(pe ADMIN_EMAIL)"; admin_email="${admin_email:-admin@example.invalid}"
-app_email="$(pe APP_USER_EMAIL)"; app_email="${app_email:-app@example.invalid}"
+admin_email="$(pe ADMIN_EMAIL)"; admin_email="${admin_email:-admin@local.test}"
+app_email="$(pe APP_USER_EMAIL)"; app_email="${app_email:-admin@local.test}"
 port="$(pe DEFAULT_PORT)"
 base_url="http://127.0.0.1:${port:-8090}"
 data_dir="$pbdir/pb_data"

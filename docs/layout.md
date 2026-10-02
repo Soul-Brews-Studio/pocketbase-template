@@ -19,6 +19,7 @@
 │   ├── bump-pocketbase.sh      pin a new PocketBase version + checksums
 │   └── privacy_check.py        no paths, private IPs, credentials or data in the repo
 ├── .github/                    CI, the init workflow and the setup issue text
+├── justfile                    the front door: just serve | start | logs | password | e2e | up
 ├── compose.yaml, .env.example  standalone run
 ├── project.env                 project identity: name, slug, port, default login emails
 ├── repository.yaml             makes the repo a Home Assistant add-on repository
