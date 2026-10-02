@@ -40,7 +40,7 @@ pe() { [ -f "$root/project.env" ] && sed -n "s/^$1=//p" "$root/project.env" | ta
 
 project_name="$(pe PROJECT_NAME)"; project_name="${project_name:-PocketBase}"
 admin_email="$(pe ADMIN_EMAIL)"; admin_email="${admin_email:-admin@example.invalid}"
-app_email="$(pe APP_USER_EMAIL)"; app_email="${app_email:-app@example.invalid}"
+app_email="$(pe APP_USER_EMAIL)"; app_email="${app_email:-admin@example.invalid}"
 port="$(pe DEFAULT_PORT)"
 base_url="http://127.0.0.1:${port:-8090}"
 data_dir="$pbdir/pb_data"
