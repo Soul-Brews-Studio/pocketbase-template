@@ -10,6 +10,19 @@ pocketbase serve --dir pocketbase/pb_data \
   --migrationsDir pocketbase/pb_migrations --hooksDir pocketbase/pb_hooks
 ```
 
+### Kept running with pm2
+
+The same server, restarted on crash and (after `pm2 save`) on reboot. The pm2 name is
+`PROJECT_SLUG`; the port is `PORT` from `.env`, else `DEFAULT_PORT`; it binds `127.0.0.1` only.
+
+```sh
+scripts/pm2.sh start       # provision (logins shown ONCE), then start under pm2
+scripts/pm2.sh logs        # follow the server log
+scripts/pm2.sh restart     # after new migrations or hooks
+scripts/pm2.sh stop        # or delete; pocketbase/pb_data stays either way
+pm2 save                   # remember it; `pm2 startup` once makes pm2 itself start at boot
+```
+
 ## As a Home Assistant add-on
 
 The repository root is also a Home Assistant add-on repository: use the README's **Add the

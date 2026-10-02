@@ -10,6 +10,7 @@
 ├── ui/                         example app UI (plain HTML) -> release ui-v<VERSION> dist.zip, served at /
 ├── scripts/
 │   ├── provision.sh            first-start logins, random passwords, idempotent
+│   ├── pm2.sh                  run it under pm2, no Docker (start/stop/restart/status/logs/delete)
 │   ├── e2e.mjs, local-e2e.sh   provisioning, rules, realtime and import tests
 │   ├── rename.sh               give the project its own name
 │   ├── ha-buttons.sh           point the Home Assistant links (repository.yaml, README) at a repo URL

@@ -60,7 +60,7 @@ Or tell a coding agent: *"Set up this template for my project, following AGENTS.
 ## Docs
 
 - [Tutorial: install on Home Assistant](docs/home-assistant/README.md): screenshots, from the store to the signed-in dashboard
-- [Running it](docs/running.md): without Docker, as a Home Assistant add-on, on an existing PocketBase, network and security
+- [Running it](docs/running.md): without Docker (or under pm2), as a Home Assistant add-on, on an existing PocketBase, network and security
 - [Repository layout](docs/layout.md): every file and what it does
 - [Testing](docs/testing.md): what the e2e covers and how to bump PocketBase
 
