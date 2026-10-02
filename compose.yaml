@@ -20,6 +20,8 @@ services:
     environment:
       # the host port, for the banner's URL (the container itself always listens on 8090)
       PORT: ${PORT:-8090}
+      # shared dev logins (admin + app, password "pocketbase-dev"); 0 = random. Bound to 127.0.0.1 only
+      PB_DEV_LOGINS: ${PB_DEV_LOGINS:-1}
     env_file:
       - path: .env
         required: false

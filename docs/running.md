@@ -70,10 +70,25 @@ enforce ownership on their own, so hooks are optional; copy `pocketbase/pb_hooks
 server's `pb_hooks` only if you want the `app-user` command or your own hooks. Create an app
 login under **users**. Tested with PocketBase v0.40.4; needs v0.23 or later.
 
+## Change the logins
+
+Compose and `scripts/pm2.sh` start with **shared dev logins**: the admin and app emails from
+`project.env`, both with the password `pocketbase-dev` (or `PB_DEFAULT_PASSWORD` from `.env`). That
+is fine on `127.0.0.1`; change them before anyone else can reach the server. The Home Assistant
+add-on never uses them: its logins are random and shown once.
+
+- **Admin (superuser):** admin UI `/_/` → *System* → *Superusers* → edit, or
+  `pocketbase superuser update <email> <new-password> --dir pocketbase/pb_data`
+  (in a container: `docker compose exec pocketbase pocketbase superuser update … --dir /data/pb_data`).
+- **App user:** admin UI → *Collections* → `users` → the record → *Change password*.
+- **New installs with random logins instead:** `PB_DEV_LOGINS=0` in `.env` before the first start.
+  Provisioning never resets an existing login, so changing `.env` later has no effect on it.
+
 ## Network
 
-Compose binds `127.0.0.1` only. For other devices on your LAN, drop the `127.0.0.1:` prefix in
-`compose.yaml` and set `PUBLIC_URL`. Before exposing it to the internet, put HTTPS in front
+Compose binds `127.0.0.1` only. For other devices on your LAN, first
+[change the logins](#change-the-logins), then drop the `127.0.0.1:` prefix in `compose.yaml` and set
+`PUBLIC_URL`. Before exposing it to the internet, put HTTPS in front
 (reverse proxy or tunnel).
 
 

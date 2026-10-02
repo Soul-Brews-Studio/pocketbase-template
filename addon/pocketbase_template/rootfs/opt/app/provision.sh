@@ -4,7 +4,11 @@
 # Run it before `pocketbase serve`, or while the server is stopped. The container runs this same
 # file on every start (a copy lives in the add-on; scripts/sync-addon.sh keeps it identical).
 #
-# Passwords are ALWAYS generated randomly, on the first run only:
+# Passwords are generated randomly on the first run only, unless a shared dev password is asked for:
+#   * PB_DEFAULT_PASSWORD=<pw>  -> both logins get <pw>
+#   * PB_DEV_LOGINS=1           -> both logins get the shared dev password "pocketbase-dev"
+#                                  (compose.yaml and scripts/pm2.sh set this; the Home Assistant
+#                                  add-on never does). The banner warns; change it before exposing.
 #   * first run   -> a strong random password per login, written to
 #                    <state-dir>/initial-credentials.txt (mode 600) and printed ONCE in a banner.
 #   * later runs  -> nothing is touched (a password changed later in the admin UI is never
@@ -93,13 +97,17 @@ set_kv() {
 
 generated=""
 
+# Shared dev password: an explicit PB_DEFAULT_PASSWORD wins, then PB_DEV_LOGINS=1; otherwise random.
+dev_password="${PB_DEFAULT_PASSWORD:-}"
+if [ -z "$dev_password" ] && [ "${PB_DEV_LOGINS:-0}" = 1 ]; then dev_password="pocketbase-dev"; fi
+
 provision() { # role email
   local role="$1" email="$2" password
   if [ "$(get_kv "$creds" "${role}_email")" = "$email" ]; then
     echo "provision: $role login $email already set up."
     return
   fi
-  password="$(random_password)"
+  if [ -n "$dev_password" ]; then password="$dev_password"; else password="$(random_password)"; fi
   if [ "$role" = admin ]; then
     pbrun superuser upsert "$email" "$password"
   else
@@ -141,6 +149,10 @@ if [ -n "$generated" ]; then
     echo " API base    : $base_url/api/" ;;
   esac
   echo " saved to    : $creds (mode 600)"
+  if [ -n "$dev_password" ]; then
+    echo " WARNING     : shared dev password. Change it before exposing this server:"
+    echo "               docs/running.md#change-the-logins"
+  fi
   echo "=================================================================="
 else
   echo "provision: generated initial credentials are in $creds"

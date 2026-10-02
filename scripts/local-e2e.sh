@@ -10,6 +10,7 @@
 # Needs: pocketbase (the version pinned in the Dockerfile) on PATH or in $POCKETBASE,
 # node 18+ (or bun: RUNNER=bun), python3, curl.
 set -uo pipefail
+unset PB_DEV_LOGINS PB_DEFAULT_PASSWORD   # these tests expect random logins unless they ask
 here="$(cd "$(dirname "$0")/.." && pwd)"
 runner="${RUNNER:-node}"
 pb="${POCKETBASE:-pocketbase}"
@@ -61,6 +62,16 @@ other="$(POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$tmp/other" --url 
 [ "$(sed -n 's/^admin_password=//p' "$tmp/other/initial-credentials.txt")" != "$(kv admin_password)" ]
 result $? "another fresh dir gets different passwords (never a fixed default)"
 rm -rf "$tmp/other"
+
+dev="$(PB_DEV_LOGINS=1 POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$tmp/dev" --url "$url" 2>&1)"
+[ "$(sed -n 's/^admin_password=//p' "$tmp/dev/initial-credentials.txt")" = pocketbase-dev ] \
+  && [ "$(sed -n 's/^app_password=//p' "$tmp/dev/initial-credentials.txt")" = pocketbase-dev ] \
+  && echo "$dev" | grep -q "WARNING     : shared dev password"
+result $? "PB_DEV_LOGINS=1: both logins get the shared dev password, banner warns"
+own="$(PB_DEFAULT_PASSWORD=my-own-dev-pass1 POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$tmp/own" --url "$url" 2>&1)"
+[ "$(sed -n 's/^admin_password=//p' "$tmp/own/initial-credentials.txt")" = my-own-dev-pass1 ]
+result $? "PB_DEFAULT_PASSWORD sets your own shared password"
+rm -rf "$tmp/dev" "$tmp/own"
 
 before="$(cat "$creds")"
 second="$(POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$data" --url "$url")"; rc=$?

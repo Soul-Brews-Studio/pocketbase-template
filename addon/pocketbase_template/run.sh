@@ -20,6 +20,7 @@ project_name="$(pe PROJECT_NAME)"
 
 if [ -n "${SUPERVISOR_TOKEN:-}" ] && bashio::supervisor.ping >/dev/null 2>&1; then
   bashio::log.info "Mode: Home Assistant add-on (options from the Supervisor)"
+  unset PB_DEV_LOGINS PB_DEFAULT_PASSWORD   # reachable beyond localhost: always random logins
   admin_email="$(bashio::config 'admin_email')"
   app_email="$(bashio::config 'app_email')"
   if bashio::config.has_value 'public_url'; then
