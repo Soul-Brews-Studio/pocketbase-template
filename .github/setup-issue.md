@@ -11,7 +11,11 @@ Work through this list once to finish the setup; an AI coding agent can do it fo
 - [ ] **Tests:** matching checks in `scripts/e2e.mjs`
 - [ ] **Regenerate:** `scripts/export-collections.sh` and `scripts/sync-addon.sh`
 - [ ] **Verify:** `scripts/local-e2e.sh` → `LOCAL E2E: ALL PASS`, `python3 scripts/privacy_check.py`
-- [ ] **Run it:** `docker compose up --build -d`, logins in `docker compose logs` (shown once)
+- [ ] **Run it:** `scripts/pm2.sh start` (no Docker; admin and app use this machine's shared dev
+      password, `cat ~/.config/pocketbase-template/dev-password`) or `docker compose up --build -d`
+      (random logins in `docker compose logs`, shown once)
+- [ ] **Change the logins** before anyone else can reach it:
+      (`docs/running.md` → *Change the logins*)
 - [ ] **Home Assistant:** in a public repo the init workflow switched the add-on to a prebuilt GHCR
       image and started `addon-image`. GHCR packages start **private**: once that run is green, open
       [your packages](https://github.com/__OWNER__?tab=packages) → each `*-addon-*` package →

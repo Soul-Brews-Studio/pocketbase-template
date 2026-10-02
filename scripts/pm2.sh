@@ -12,7 +12,8 @@
 #
 # The pm2 name is PROJECT_SLUG from project.env. The port is PORT from .env if set, otherwise
 # DEFAULT_PORT. It binds 127.0.0.1 only, the same as compose.yaml. Needs `pm2` and the pocketbase
-# binary pinned in the Dockerfile (on PATH, or $POCKETBASE).
+# binary pinned in the Dockerfile (on PATH, or $POCKETBASE). Logins: this machine's shared dev
+# password (PB_DEV_LOGINS=1, see docs/running.md#change-the-logins); PB_DEV_LOGINS=0 in .env = random.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -37,6 +38,9 @@ case "${1:-}" in
     if pm2 describe "$name" >/dev/null 2>&1; then
       echo "pm2.sh: '$name' is already in pm2; use restart, or delete first" >&2; exit 1
     fi
+    PB_DEV_LOGINS="${PB_DEV_LOGINS:-$(kv "$root/.env" PB_DEV_LOGINS)}"
+    PB_DEFAULT_PASSWORD="${PB_DEFAULT_PASSWORD:-$(kv "$root/.env" PB_DEFAULT_PASSWORD)}"
+    export PB_DEV_LOGINS="${PB_DEV_LOGINS:-1}" PB_DEFAULT_PASSWORD
     "$root/scripts/provision.sh" --url "http://127.0.0.1:$port" --pocketbase "$pb"
     pm2 start "$pb" --name "$name" --cwd "$root" --interpreter none -- \
       serve --http "127.0.0.1:$port" --dir pocketbase/pb_data \

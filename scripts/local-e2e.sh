@@ -10,6 +10,7 @@
 # Needs: pocketbase (the version pinned in the Dockerfile) on PATH or in $POCKETBASE,
 # node 18+ (or bun: RUNNER=bun), python3, curl.
 set -uo pipefail
+unset PB_DEV_LOGINS PB_DEFAULT_PASSWORD PB_DEV_PASSWORD_FILE   # random logins unless a test asks
 here="$(cd "$(dirname "$0")/.." && pwd)"
 runner="${RUNNER:-node}"
 pb="${POCKETBASE:-pocketbase}"
@@ -61,6 +62,23 @@ other="$(POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$tmp/other" --url 
 [ "$(sed -n 's/^admin_password=//p' "$tmp/other/initial-credentials.txt")" != "$(kv admin_password)" ]
 result $? "another fresh dir gets different passwords (never a fixed default)"
 rm -rf "$tmp/other"
+
+devfile="$tmp/devcfg/dev-password"
+dev="$(PB_DEV_LOGINS=1 PB_DEV_PASSWORD_FILE="$devfile" POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$tmp/dev" --url "$url" 2>&1)"
+dev2="$(PB_DEV_LOGINS=1 PB_DEV_PASSWORD_FILE="$devfile" POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$tmp/dev2" --url "$url" 2>&1)"
+shared="$(head -n 1 "$devfile" 2>/dev/null)"
+[[ "$shared" =~ ^[A-Za-z0-9]{24}$ ]] && [ "$(mode "$devfile")" = 600 ] \
+  && [ "$(sed -n 's/^admin_password=//p' "$tmp/dev/initial-credentials.txt")" = "$shared" ] \
+  && [ "$(sed -n 's/^app_password=//p' "$tmp/dev/initial-credentials.txt")" = "$shared" ] \
+  && [ "$(sed -n 's/^admin_password=//p' "$tmp/dev2/initial-credentials.txt")" = "$shared" ] \
+  && echo "$dev" | grep -q "WARNING     : shared dev password"
+result $? "PB_DEV_LOGINS=1: one random per-machine password (file 600) shared by every project, banner warns"
+rm -rf "$tmp/dev2" "$tmp/devcfg"
+mine="x$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 15)"
+own="$(PB_DEFAULT_PASSWORD="$mine" POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$tmp/own" --url "$url" 2>&1)"
+[ "$(sed -n 's/^admin_password=//p' "$tmp/own/initial-credentials.txt")" = "$mine" ]
+result $? "PB_DEFAULT_PASSWORD sets your own shared password"
+rm -rf "$tmp/dev" "$tmp/own"
 
 before="$(cat "$creds")"
 second="$(POCKETBASE="$pb" "$here/scripts/provision.sh" --dir "$data" --url "$url")"; rc=$?
