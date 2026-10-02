@@ -16,9 +16,11 @@ image installs as a Home Assistant add-on with a sidebar panel that signs you in
 ## Quick start
 
 ```sh
-docker compose up --build -d
-docker compose logs        # admin UI URL + admin and app logins, random passwords, shown ONCE
+just serve                 # no Docker: provision + run (needs pocketbase); just start = under pm2
+just password              # login admin@local.test + this machine's shared dev password
 ```
+
+Or with Docker: `docker compose up --build -d`, then `docker compose logs` (random logins, shown ONCE).
 
 `docker compose down -v` deletes everything; the next start provisions again.
 

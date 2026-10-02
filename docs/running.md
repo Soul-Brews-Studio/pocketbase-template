@@ -10,6 +10,17 @@ pocketbase serve --dir pocketbase/pb_data \
   --migrationsDir pocketbase/pb_migrations --hooksDir pocketbase/pb_hooks
 ```
 
+### With `just` (foreground or pm2)
+
+```sh
+just serve        # foreground, no pm2 and no Docker (Ctrl-C stops it)
+just start        # under pm2; then just logs | restart | stop | status | delete
+just password     # where the shared dev password is (login: admin@local.test)
+just e2e          # the full local test
+```
+
+The recipes wrap `scripts/pm2.sh`; use it directly where `just` is not installed.
+
 ### Kept running with pm2
 
 The same server, restarted on crash and (after `pm2 save`) on reboot. The pm2 name is
@@ -72,8 +83,8 @@ login under **users**. Tested with PocketBase v0.40.4; needs v0.23 or later.
 
 ## Change the logins
 
-`scripts/pm2.sh` starts with **shared dev logins**: the admin and app emails from `project.env`,
-both with this machine's dev password. It is random, made once, and reused by every project on the
+`just serve` / `just start` (`scripts/pm2.sh`) start with **one shared dev login**:
+`admin@local.test` (admin page and app, from `project.env`) with this machine's dev password. It is random, made once, and reused by every project on the
 machine, so one password opens all of them:
 
 ```sh
