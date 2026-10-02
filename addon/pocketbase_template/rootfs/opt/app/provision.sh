@@ -4,7 +4,13 @@
 # Run it before `pocketbase serve`, or while the server is stopped. The container runs this same
 # file on every start (a copy lives in the add-on; scripts/sync-addon.sh keeps it identical).
 #
-# Passwords are ALWAYS generated randomly, on the first run only:
+# Passwords are generated randomly on the first run only, unless a shared dev password is asked for:
+#   * PB_DEFAULT_PASSWORD=<pw>  -> both logins get <pw>
+#   * PB_DEV_LOGINS=1           -> both logins get this machine's shared dev password: random, made
+#                                  once in ~/.config/pocketbase-template/dev-password (mode 600, or
+#                                  $PB_DEV_PASSWORD_FILE) and reused by every project on the machine.
+#                                  scripts/pm2.sh sets it; the Home Assistant add-on never does.
+#                                  The banner warns; change the logins before exposing the server.
 #   * first run   -> a strong random password per login, written to
 #                    <state-dir>/initial-credentials.txt (mode 600) and printed ONCE in a banner.
 #   * later runs  -> nothing is touched (a password changed later in the admin UI is never
@@ -93,13 +99,28 @@ set_kv() {
 
 generated=""
 
+# Shared dev password: an explicit PB_DEFAULT_PASSWORD wins, then PB_DEV_LOGINS=1 (one random
+# password per machine, kept in a private file); otherwise every login gets its own random one.
+dev_password="${PB_DEFAULT_PASSWORD:-}"
+dev_source="PB_DEFAULT_PASSWORD"
+if [ -z "$dev_password" ] && [ "${PB_DEV_LOGINS:-0}" = 1 ]; then
+  dev_file="${PB_DEV_PASSWORD_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/pocketbase-template/dev-password}"
+  if [ ! -s "$dev_file" ]; then
+    mkdir -p "$(dirname "$dev_file")" && chmod 700 "$(dirname "$dev_file")"
+    random_password > "$dev_file"
+  fi
+  chmod 600 "$dev_file"
+  dev_password="$(head -n 1 "$dev_file")"
+  dev_source="$dev_file"
+fi
+
 provision() { # role email
   local role="$1" email="$2" password
   if [ "$(get_kv "$creds" "${role}_email")" = "$email" ]; then
     echo "provision: $role login $email already set up."
     return
   fi
-  password="$(random_password)"
+  if [ -n "$dev_password" ]; then password="$dev_password"; else password="$(random_password)"; fi
   if [ "$role" = admin ]; then
     pbrun superuser upsert "$email" "$password"
   else
@@ -141,6 +162,10 @@ if [ -n "$generated" ]; then
     echo " API base    : $base_url/api/" ;;
   esac
   echo " saved to    : $creds (mode 600)"
+  if [ -n "$dev_password" ]; then
+    echo " WARNING     : shared dev password (from $dev_source). Change it before exposing:"
+    echo "               docs/running.md#change-the-logins"
+  fi
   echo "=================================================================="
 else
   echo "provision: generated initial credentials are in $creds"
